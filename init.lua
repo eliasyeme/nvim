@@ -1,9 +1,3 @@
-vim.o.expandtab = false
-vim.o.tabstop = 2
-vim.o.shiftwidth = 2
-vim.o.autoindent = true
-vim.o.smartindent = true
-vim.o.cindent = true
 --[[
 
 =====================================================================
@@ -314,9 +308,8 @@ vim.keymap.set({ 'n', 'v' }, '<Space>', '<Nop>', { silent = true })
 -- Remap for dealing with word wrap
 vim.keymap.set('n', 'k', "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true })
 vim.keymap.set('n', 'j', "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = true })
-vim.keymap.set('n', '<leader>ww', ':w!<CR>')
-vim.keymap.set('n', '<leader>wq', ':wq!<CR>')
-vim.keymap.set('n', '<leader>qq', ':q!<CR>')
+vim.keymap.set('n', '<leader>w', ':w!<CR>')
+vim.keymap.set('n', '<leader>q', ':q!<CR>')
 vim.keymap.set("i", "jj", "<Esc>")
 vim.keymap.set("n", "<M-b>", ":Ex<CR>")
 vim.keymap.set("n", "<leader>pv", ":vsplit<CR><C-w>l", { noremap = true })
@@ -373,7 +366,7 @@ vim.keymap.set('n', '<leader>sd', require('telescope.builtin').diagnostics, { de
 -- See `:help nvim-treesitter`
 require('nvim-treesitter.configs').setup {
   -- Add languages to be installed here that you want installed for treesitter
-  ensure_installed = { 'c', 'cpp', 'go', 'lua', 'python', 'php', 'rust', 'tsx', 'typescript', 'vimdoc', 'vim' },
+  ensure_installed = { 'ocaml', 'c', 'cpp', 'go', 'lua', 'python', 'php', 'rust', 'tsx', 'typescript', 'vimdoc', 'vim' },
 
   -- Autoinstall languages that are not installed. Defaults to false (but you can change for yourself!)
   auto_install = false,
@@ -465,7 +458,7 @@ local on_attach = function(_, bufnr)
   nmap('gI', vim.lsp.buf.implementation, '[G]oto [I]mplementation')
   nmap('<leader>D', vim.lsp.buf.type_definition, 'Type [D]efinition')
   nmap('<leader>ds', require('telescope.builtin').lsp_document_symbols, '[D]ocument [S]ymbols')
-  nmap('<leader>ws', require('telescope.builtin').lsp_dynamic_workspace_symbols, '[W]orkspace [S]ymbols')
+  nmap('<leader>dd', require('telescope.builtin').lsp_dynamic_workspace_symbols, '[W]orkspace [S]ymbols')
 
   -- See `:help K` for why this keymap
   nmap('K', vim.lsp.buf.hover, 'Hover Documentation')
@@ -473,9 +466,9 @@ local on_attach = function(_, bufnr)
 
   -- Lesser used LSP functionality
   nmap('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
-  nmap('<leader>wa', vim.lsp.buf.add_workspace_folder, '[W]orkspace [A]dd Folder')
-  nmap('<leader>wr', vim.lsp.buf.remove_workspace_folder, '[W]orkspace [R]emove Folder')
-  nmap('<leader>wl', function()
+  nmap('<leader>da', vim.lsp.buf.add_workspace_folder, '[W]orkspace [A]dd Folder')
+  nmap('<leader>dr', vim.lsp.buf.remove_workspace_folder, '[W]orkspace [R]emove Folder')
+  nmap('<leader>dl', function()
     print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
   end, '[W]orkspace [L]ist Folders')
 
@@ -501,6 +494,9 @@ local servers = {
   eslint = {},
   tsserver = {},
   html = { filetypes = { 'html', 'twig', 'hbs', 'php' } },
+  ocamllsp = {
+    filetypes = { "ocaml", "ocaml.menhir", "ocaml.interface", "ocaml.ocamllex", "reason", "dune" },
+  },
 
   lua_ls = {
     Lua = {
@@ -583,5 +579,42 @@ cmp.setup {
   },
 }
 
+vim.keymap.set('n', '<leader>gs', vim.cmd.Git, { desc = '[G]it [S]tatus' })
+vim.opt.expandtab = false
+vim.opt.tabstop = 2
+vim.opt.shiftwidth = 2
+vim.opt.autoindent = true
+vim.opt.smartindent = true
+vim.opt.cindent = true
+
+local elias = vim.api.nvim_create_augroup("elias", {})
+
+local autocmd = vim.api.nvim_create_autocmd
+autocmd("BufWinEnter", {
+  group = elias,
+  pattern = "*",
+  callback = function()
+    if vim.bo.ft ~= "fugitive" then
+      return
+    end
+
+    local bufnr = vim.api.nvim_get_current_buf()
+    vim.keymap.set("n", "<leader>gP", function()
+      vim.cmd.Git('push')
+    end, { buffer = bufnr, remap = false, desc = '[G]it [P]ush' })
+
+    -- rebase always
+    vim.keymap.set("n", "<leader>gr", function()
+      vim.cmd.Git({ 'pull', '--rebase' })
+    end, { buffer = bufnr, remap = false, desc = '[G]it [R]ebase' })
+
+    -- NOTE: It allows me to easily set the branch i am pushing and any tracking
+    -- needed if i did not set the branch up correctly
+    vim.keymap.set("n", "<leader>go", ":Git push -u origin ", { buffer = bufnr, remap = false, desc = '[G]it [O]rigin' });
+  end,
+})
+vim.g.netrw_browse_split = 0
+vim.g.netrw_banner = 0
+vim.g.netrw_winsize = 25
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
