@@ -1,49 +1,6 @@
---[[
-
-=====================================================================
-==================== READ THIS BEFORE CONTINUING ====================
-=====================================================================
-
-Kickstart.nvim is *not* a distribution.
-
-Kickstart.nvim is a template for your own configuration.
-  The goal is that you can read every line of code, top-to-bottom, understand
-  what your configuration is doing, and modify it to suit your needs.
-
-  Once you've done that, you should start exploring, configuring and tinkering to
-  explore Neovim!
-
-  If you don't know anything about Lua, I recommend taking some time to read through
-  a guide. One possible example:
-  - https://learnxinyminutes.com/docs/lua/
-
-  And then you can explore or search through `:help lua-guide`
-
-
-Kickstart Guide:
-
-I have left several `:help X` comments throughout the init.lua
-You should run that command and read that help section for more information.
-
-In addition, I have some `NOTE:` items throughout the file.
-These are for you, the reader to help understand what is happening. Feel free to delete
-them once you know what you're doing, but they should serve as a guide for when you
-are first encountering a few different constructs in your nvim config.
-
-I hope you enjoy your Neovim journey,
-- TJ
-
-P.S. You can delete this when you're done too. It's your config now :)
---]]
--- Set <space> as the leader key
--- See `:help mapleader`
---  NOTE: Must happen before plugins are required (otherwise wrong leader will be used)
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
--- Install package manager
---    https://github.com/folke/lazy.nvim
---    `:help lazy.nvim.txt` for more info
 local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'
 if not vim.loop.fs_stat(lazypath) then
   vim.fn.system {
@@ -57,23 +14,31 @@ if not vim.loop.fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
--- NOTE: Here is where you install your plugins.
---  You can configure plugins using the `config` key.
---
---  You can also configure plugins after the setup call,
---    as they will be available in your neovim runtime.
 require('lazy').setup({
-  -- NOTE: First, some plugins that don't require any configuration
-
-  -- Git related plugins
   'tpope/vim-fugitive',
   'tpope/vim-rhubarb',
 
-  -- Detect tabstop and shiftwidth automatically
-  'tpope/vim-sleuth',
-
-  -- NOTE: This is where your plugins related to LSP can be installed.
-  --  The configuration is done below. Search for lspconfig to find it below.
+  {
+    'renerocksai/telekasten.nvim',
+    dependencies = {
+      'nvim-telescope/telescope.nvim',
+      'renerocksai/calendar-vim',
+      'nvim-telescope/telescope-media-files.nvim',
+    },
+    config = function()
+      require('telekasten').setup({
+        home = vim.fn.expand("~/notes"), -- Put the name of your notes directory here
+      })
+    end,
+  },
+  {
+    'mrcjkb/haskell-tools.nvim',
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+    },
+    branch = '2.x.x', -- Recommended
+    ft = { 'haskell', 'lhaskell', 'cabal', 'cabalproject' },
+  },
   {
     -- LSP Configuration & Plugins
     'neovim/nvim-lspconfig',
@@ -309,6 +274,10 @@ vim.keymap.set({ 'n', 'v' }, '<Space>', '<Nop>', { silent = true })
 vim.keymap.set('n', 'k', "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true })
 vim.keymap.set('n', 'j', "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = true })
 vim.keymap.set('n', '<leader>w', ':w!<CR>')
+vim.keymap.set('n', '<leader>sn', ':Telekasten find_notes<CR>')
+vim.keymap.set('n', '<leader>nn', ':Telekasten new_note<CR>')
+vim.keymap.set('n', '<leader>ni', ':Telekasten insert_link<CR>')
+vim.keymap.set('n', '<leader>nf', ':Telekasten follow_link<CR><CR>')
 vim.keymap.set('n', '<leader>q', ':q!<CR>')
 vim.keymap.set("i", "jj", "<Esc>")
 vim.keymap.set("n", "<M-b>", ":Ex<CR>")
